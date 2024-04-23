@@ -1,0 +1,83 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+
+    <!--search function-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="temples.js"></script>
+
+</head>
+
+<body>
+    <div style="width: 100vw; height: 100vh" id="map"></div>
+    <script type="text/javascript">
+
+        const map = new L.Map('map', {
+            center: new L.LatLng(27.51267030966134, 77.66826363091077),
+            zoom: 14,
+            maxZoom: 18,
+    
+        });
+        const osm = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+
+        navigator.geolocation.watchPosition(success, error);
+
+        let marker, circle, zoomed;
+
+        function success(pos) {
+
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const accuracy = pos.coords.accuracy;
+
+            if (marker) {
+                map.removeLayer(marker);
+                map.removeLayer(circle);
+            }
+
+            marker = L.marker([lat, lng]).addTo(map);
+            circle = L.circle([lat, lng], { radius: accuracy }).addTo(map);
+
+            if (!zoomed) {
+                map.fitBounds(circle.getBounds());
+            }
+
+            map.setView([lat, lng]);
+            
+
+        }
+
+        function error(err) {
+            if (err.code === 1) {
+                alert("Please allow geolocation access");
+            }
+            else {
+                alert("Cannot get current location");
+            }
+        }
+
+        map.addLayer(osm);
+
+        L.geoJSON(geojsonFeatureCollection).addTo(map);
+        L.Control.geocoder().addTo(map);
+
+
+
+        function onEachFeature(feature, layer) {
+            // does this feature have a property named popupContent?
+            if (feature.properties && feature.properties.popupContent) {
+                layer.bindPopup(feature.properties.popupContent);
+            }
+        }
+
+        L.geoJSON(geojsonFeatureCollection, {
+            onEachFeature: onEachFeature
+        }).addTo(map);
+
+    </script>
+</body>
+
+</html>
